@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Modal } from "bootstrap";
+import { useDispatch } from "react-redux";
+import { pushMessage } from "../redux/toastSlice";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 const API_PATH = import.meta.env.VITE_API_PATH;
@@ -33,6 +35,8 @@ function ProductModal({
     }
   }, [isOpen]);
 
+  const dispatch = useDispatch();
+
   const handleCloseProductModal = () => {
     const modalInstance = Modal.getInstance(productModalRef.current);
     modalInstance.hide();
@@ -43,7 +47,7 @@ function ProductModal({
     const { value, name, checked, type } = e.target;
     setModalData({
       ...modalData,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === "checkbox" ? checked : value || "",
     });
   };
 
@@ -75,7 +79,15 @@ function ProductModal({
         },
       });
     } catch (error) {
-      alert("新增產品失敗");
+      //alert("新增產品失敗");
+      //console.log("dispatch pushMessage:", message);
+      const { message } = error.response.data;
+      dispatch(
+        pushMessage({
+          text: message.join(","),
+          status: "failed",
+        })
+      );
     }
   };
   const updateProduct = async () => {
@@ -90,6 +102,13 @@ function ProductModal({
             is_enabled: modalData.is_enabled ? 1 : 0,
           },
         }
+      );
+
+      dispatch(
+        pushMessage({
+          text: "編輯產品成功",
+          status: "success",
+        })
       );
     } catch (error) {
       alert("編輯產品失敗");
